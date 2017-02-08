@@ -12,7 +12,8 @@ function dx=SimSonic3DConvSnp3D2vtk(snp3DFileName, vtkFileName, ThinOutFactor);
 %
 %   SimSonic3D complementary toolbox
 %   Author: Yoshiki NAGATANI / https://ultrasonics.jp/nagatani/fdtd/
-%   Date: 2016/08/05
+%       Date: 2016/08/05 first version
+%     Update: 2017/02/08 bug fix
 
 
 % check parameters
@@ -47,23 +48,16 @@ fprintf(fileout_vtk, '%s\n', '# vtk DataFile Version 2.0');
 fprintf(fileout_vtk, '%s at %e s (x%d)\n', snp3DFileName, t/1e6, ThinOutFactor);
 fprintf(fileout_vtk, '%s\n', 'ASCII');
 fprintf(fileout_vtk, '%s\n', 'DATASET STRUCTURED_POINTS');
-fprintf(fileout_vtk, '%s %d %d %d\n', 'DIMENSIONS', ceil(Nx/ThinOutFactor), ceil(Ny/ThinOutFactor), ceil(Nz/ThinOutFactor));
+fprintf(fileout_vtk, '%s %d %d %d\n', 'DIMENSIONS', floor(Nx/ThinOutFactor), floor(Ny/ThinOutFactor), floor(Nz/ThinOutFactor));
 fprintf(fileout_vtk, '%s %f %f %f\n', 'ORIGIN', 0.0, 0.0, 0.0);
 fprintf(fileout_vtk, '%s %f %f %f\n', 'SPACING', dx*ThinOutFactor, dx*ThinOutFactor, dx*ThinOutFactor);
-fprintf(fileout_vtk, '%s %d\n', 'POINT_DATA', ceil(Nx/ThinOutFactor)*ceil(Ny/ThinOutFactor)*ceil(Nz/ThinOutFactor));
+fprintf(fileout_vtk, '%s %d\n', 'POINT_DATA', floor(Nx/ThinOutFactor)*floor(Ny/ThinOutFactor)*floor(Nz/ThinOutFactor));
 fprintf(fileout_vtk, '%s %s(x%d) %s\n', 'SCALARS', 'snp3D', ThinOutFactor, 'float');
 fprintf(fileout_vtk, '%s\n', 'LOOKUP_TABLE default');
-for z=1:ThinOutFactor:Nz
-    for y=1:ThinOutFactor:Ny
-        for x=1:ThinOutFactor:Nx
-            tmp = 0.0;
-            for k=0:ThinOutFactor-1
-                for j=0:ThinOutFactor-1
-                    for i=0:ThinOutFactor-1
-                        tmp = tmp + Donnees(x+i,y+j,z+k);
-                    end
-                end
-            end
+for z=1:ThinOutFactor:Nz-(ThinOutFactor-1)
+    for y=1:ThinOutFactor:Ny-(ThinOutFactor-1)
+        for x=1:ThinOutFactor:Nx-(ThinOutFactor-1)
+            tmp = sum(sum(sum(Donnees(x:x+ThinOutFactor-1,y:y+ThinOutFactor-1,z:z+ThinOutFactor-1))));
             tmp = tmp / (ThinOutFactor*ThinOutFactor*ThinOutFactor);
             fprintf(fileout_vtk, ' %8.3e\n', tmp);
         end
